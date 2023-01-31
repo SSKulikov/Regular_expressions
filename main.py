@@ -3,6 +3,7 @@ from pprint import pprint
 import csv
 import re
 from typing import List, Any
+import pandas as pd
 
 with open("phonebook_raw.csv", 'r', encoding='utf-8') as f:
     rows = csv.reader(f, delimiter=",")
@@ -13,6 +14,7 @@ with open("phonebook_raw.csv", 'r', encoding='utf-8') as f:
 def names_moving():
     name_pattern = r'([А-Я])'
     name_substitution = r' \1'
+
     for column in contacts_list[1:]:
         line = column[0] + column[1] + column[2]
         if len((re.sub(name_pattern, name_substitution, line).split())) == 3:
@@ -47,21 +49,32 @@ def duplicates_combining():
             new_first_name = contact[0]
             new_last_name = contact[1]
             if first_name == new_first_name and last_name == new_last_name:
-                if column[2] == '':
-                    column[2] = contact[2]
-                if column[3] == '':
-                    column[3] = contact[3]
-                if column[4] == '':
-                    column[4] = contact[4]
-                if column[5] == '':
-                    column[5] = contact[5]
-                if column[6] == '':
-                    column[6] = contact[6]
+                for item in range(2, 7):
+                    if contact[item] == '':
+                        contact[item] = column[item]
 
     for contact in contacts_list:
         if contact not in new_list:
             new_list.append(contact)
     return new_list
+
+def merge_list(lst1, lst2):
+    for i in lst2:
+        if i not in lst1:
+            lst1.append(i)
+    return lst1
+
+
+def result_list():
+    duplicate = {'result': [], "two": []}
+    list_new = [n[0] for n in new_list]
+    for index, item in enumerate(new_list):
+        if list_new.count(item[0]) == 1:
+            duplicate['result'].append(item)
+        else:
+            duplicate['two'].append(item)
+    duplicate['result'].append(merge_list(duplicate['two'][0], duplicate['two'][1]))
+    return duplicate['result']
 
 
 if __name__ == '__main__':
@@ -69,6 +82,6 @@ if __name__ == '__main__':
     phone_number_formatting()
     duplicates_combining()
 
-    with open("phonebook.csv", "w", encoding='utf-8') as f:
-        datawriter = csv.writer(f, delimiter=',')
-        datawriter.writerows(new_list)
+with open("phonebook.csv", "w", encoding='utf-8', newline='') as f:
+    datawriter = csv.writer(f, delimiter=',')
+    datawriter.writerows(result_list())
